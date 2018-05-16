@@ -3,7 +3,6 @@ package com.company;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -68,15 +67,15 @@ public class Parser {
         }
     }
 
-    public ArrayList<String> alphabeticalMatchSort(){
+    public ArrayList<String> alphabeticalMatchSort() {
         Collections.sort(wordArray);
         return wordArray;
     }
 
-    public ArrayList<String> alphabeticalMatchSort(String prefix){
+    public ArrayList<String> alphabeticalMatchSort(String prefix) {
         ArrayList<String> prefixedSortedWords = new ArrayList<>();
         for (String s : wordArray) {
-            if(s.startsWith(prefix)){
+            if (s.startsWith(prefix)) {
                 prefixedSortedWords.add(s);
             }
         }
@@ -99,7 +98,9 @@ public class Parser {
         HashMap<String, ArrayList<String>> wordsWithinOccurrenceRange = new HashMap<>();
         for (int i = countMin; i <= countMax; i++) {
             String integerKey = new Integer(i).toString();
-            wordsWithinOccurrenceRange.put(integerKey, countToWords.get(integerKey));
+            if (countToWords.containsKey(integerKey)) {
+                wordsWithinOccurrenceRange.put(integerKey, countToWords.get(integerKey));
+            }
         }
         return wordsWithinOccurrenceRange;
     }
