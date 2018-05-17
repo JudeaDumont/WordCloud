@@ -5,6 +5,8 @@ public class LazyBalancedBinarySearchTree<T> {
         public Node left = null;
         public Node right = null;
         public Node parent = null;
+        public Node leftMostOfRightSubTree = null;
+        public Node rightMostOfLeftSubTree = null;
         public int id = -1;
         public int weight = 0;
         public T data = null;
