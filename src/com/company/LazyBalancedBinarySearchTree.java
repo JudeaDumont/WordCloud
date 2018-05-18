@@ -8,7 +8,8 @@ public class LazyBalancedBinarySearchTree<T> {
         public Node leftMostOfRightSubTree = null;
         public Node rightMostOfLeftSubTree = null;
         public int id = -1;
-        public int weight = 0;
+        public int rightWeight = 0;
+        public int leftWeight = 0;
         public T data = null;
 
         Node(int id, T data) {
@@ -20,113 +21,153 @@ public class LazyBalancedBinarySearchTree<T> {
         public int compareTo(Object o) {
             Integer beforeOrAfter = null;
             try {
-                beforeOrAfter = ((Node) o).id - this.id;
+                beforeOrAfter = this.id - ((Node) o).id;
             } catch (Exception e) {
                 e.printStackTrace();
             }
             return beforeOrAfter;
         }
+
+        @Override
+        public String toString() {
+            return "Node{" +
+                    "left=" + left.id +
+                    ", right=" + right.id +
+                    ", parent=" + parent.id +
+                    ", leftMostOfRightSubTree=" + leftMostOfRightSubTree.id +
+                    ", rightMostOfLeftSubTree=" + rightMostOfLeftSubTree.id +
+                    ", id=" + id +
+                    ", rightWeight=" + rightWeight +
+                    ", leftWeight=" + leftWeight +
+                    ", data=" + data +
+                    '}';
+        }
     }
 
     //Walk from root, or walk from current
     public Node root = null;
-    public Node current = null;
+    public Node globalCurrent = null;
 
     public Node add(int id, T data) throws Exception {
         Node newNode = new Node(id, data);
+        Node localCurrent = root;
+
         if (root == null) {//todo: refactor, most the time the root is not null
             this.root = newNode;
         } else {
             //a better way to do this is by walking the tree, adding the node, and then fixing the tree.
-            if (current == null) {//lazy walk
-                current = root;
-            }
+//            if (current == null) {//lazy walk
+//                current = root;
+//            }
+            walk(newNode, localCurrent);
+            localBalance(newNode);
+            weightDistribute(newNode); //called appropriately from localbalance case
+            balance();
 
-            if (current.compareTo(newNode) < 0) { //left child
-                if (current.left == null) {
-                    current.left = newNode;
-                    newNode.parent = current;
-                    current.weight -= 1;
-                } else {
-                    //left child
-                    //left child is not null, current comes after new
-                    if (current.left.compareTo(newNode) < 0) {
-                        //left child
-                        //left child is not null, current comes after new
-                        //in-between parent and left child
-                        if (current.right == null) {
-                            //left child
-                            //left child is not null, current comes after new
-                            //in-between parent and left child
-                            if (current.left.right == null) {
-                                //straight line left, rotate
-
-                            } else {
-                                //walk left // push new through function call stack
-
-                            }
-                        } else {
-                            //left child
-                            //left child is not null, current comes after new
-                            //in-between parent and left child
-                            //left is not null, right is not null, replace left with new, left becomes left child of new
-                        }
-                    } else {
-                        //left child
-                        //left child is not null,
-                        //left child of left child of current
-                        if (current.right == null) {
-                            //left child
-                            //left child is not null,
-                            //left child of left child of current
-                            //right is null
-                            if (current.left.right == null) {
-                                //left child
-                                //left child is not null,
-                                //left child of left child of current
-                                //right is null
-                                //lefts right is null, rotate
-
-                            } else {
-                                //left child
-                                //left child is not null,
-                                //left child of left child of current
-                                //right is null
-                                //lefts right is not null
-
-                            }
-                        } else { //left is not null, right is not null, replace left with new, left becomes left child of new
-                            if (current.left.right == null) {//straight line left, rotate
-
-                            } else {
-
-                            }
-                        }
-                    }
-                }
-            } else if (current.compareTo(newNode) > 0) { //right child
-                if (current.right == null) {
-                    current.right = newNode;
-                    newNode.parent = current;
-                    current.weight += 1;
-                } else { //right child is not null
-
-                }
-            } else if (current.left != null && current.right != null) { //todo:refactor for most the time this is true
-                if (current.left.compareTo(newNode) > 0 && current.right.compareTo(newNode) < 0) { //between
-                    if (current.compareTo(newNode) < 0) { //between left and parent
-
-                    } else if (current.compareTo(newNode) > 0) {
-
-                    } else if (current.compareTo(newNode) == 0) {
-                        throw new Exception("Duplicate");
-                    }
-                }
-            }
         }
         if (newNode == null) {
             throw new Exception("Node was never created");
         }
         return newNode;
+    }
+
+    private void weightDistribute(Node current) {
+        while (current != null) {
+            if (current.left != null) {
+                current.leftWeight = current.left.rightWeight + current.left.leftWeight + 1;
+            }
+            if (current.right != null) {
+                current.rightWeight = current.right.rightWeight + current.right.leftWeight + 1;
+            }
+            weightDistribute(current.parent);
+        }
+    }
+
+    private void localBalance(Node newNode) {
+        //Already determined that the newNode has a parent otherwise this function would not have been called,
+        // only node that does not have a parent is the root.
+
+        //top level parent of rotation might point to the rotated section via left or right child pointer,
+        // compensate for this.
+        // the weight of nodes shifts with a rotation, compensate for this
+        if (newNode.parent.parent != null) {
+            if (newNode.parent.right == null && newNode.parent.parent.right == null) {
+                if (newNode.parent.parent == root) {
+                    //new root
+                    newNode.parent.right = newNode.parent.parent;
+                    newNode.parent.parent.parent = newNode.parent;
+                    newNode.parent.parent.left = null;
+                    newNode.parent.parent = null;
+                    root = newNode.parent;
+                } else {
+                    newNode.parent.right = newNode.parent.parent;
+                    newNode.parent.parent.parent.left = newNode.parent;
+                    newNode.parent.parent.left = null;
+                    Node parent = newNode.parent.parent.parent;
+                    newNode.parent.parent.parent = newNode.parent;
+                    newNode.parent.parent = parent;
+                }
+            } else if (newNode.parent.left == null && newNode.parent.parent.left == null) {
+                if (newNode.parent.parent == root) {
+                    //new root
+                    newNode.parent.left = newNode.parent.parent;
+                    newNode.parent.parent.parent = newNode.parent;
+                    newNode.parent.parent.right = null;
+                    newNode.parent.parent = null;
+                    root = newNode.parent;
+                } else {
+                    newNode.parent.left = newNode.parent.parent;
+                    newNode.parent.parent.parent.right = newNode.parent;
+                    newNode.parent.parent.right = null;
+                    Node parent = newNode.parent.parent.parent;
+                    newNode.parent.parent.parent = newNode.parent;
+                    newNode.parent.parent = parent;
+                }
+            }else if (newNode.parent.left == null && newNode.parent.parent.right == null) {
+                if (newNode.parent.parent == root) {
+                    //new root
+                    newNode.right = newNode.parent.parent;
+                    newNode.left = newNode.parent;
+                    newNode.right.parent = newNode;
+                    newNode.left.parent = newNode;
+                    newNode.right.leftWeight = 0;
+                    newNode.right.rightWeight = 0;
+                    newNode.left.leftWeight = 0;
+                    newNode.left.rightWeight = 0;
+                    root = newNode;
+                } else {
+                    newNode.parent.left = newNode.parent.parent;
+                    newNode.parent.parent.parent.right = newNode.parent;
+                    newNode.parent.parent.right = null;
+                    Node parent = newNode.parent.parent.parent;
+                    newNode.parent.parent.parent = newNode.parent;
+                    newNode.parent.parent = parent;
+                }
+            }
+        }
+    }
+
+    private void balance() {
+        Node localCurrent = root;
+    }
+
+    private void walk(Node newNode, Node current) throws Exception {
+        if (current.compareTo(newNode) > 0) {
+            if (current.left == null) {
+                current.left = newNode;
+                newNode.parent = current;
+            } else {
+                walk(newNode, current.left);
+            }
+        } else if (current.compareTo(newNode) < 0) {
+            if (current.right == null) {
+                current.right = newNode;
+                newNode.parent = current;
+            } else {
+                walk(newNode, current.right);
+            }
+        } else if (current.compareTo(newNode) == 0) {
+            throw new Exception("Duplicate Node ID" + newNode.toString());
+        }
     }
 }
