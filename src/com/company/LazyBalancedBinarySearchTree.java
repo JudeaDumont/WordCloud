@@ -1,6 +1,9 @@
 package com.company;
 
+import java.util.ArrayList;
+
 public class LazyBalancedBinarySearchTree<T> {
+    private ArrayList<Node> nodeList = new ArrayList<>();
     private class Node implements Comparable {
         public Node left = null;
         public Node right = null;
@@ -11,6 +14,7 @@ public class LazyBalancedBinarySearchTree<T> {
         public int rightWeight = 0;
         public int leftWeight = 0;
         public T data = null;
+        public Boolean clean = false;
 
         Node(int id, T data) {
             this.id = id;
@@ -31,16 +35,16 @@ public class LazyBalancedBinarySearchTree<T> {
         @Override
         public String toString() {
             return "Node{" +
-                    "left=" + left.id +
-                    ", right=" + right.id +
-                    ", parent=" + parent.id +
-                    ", leftMostOfRightSubTree=" + leftMostOfRightSubTree.id +
-                    ", rightMostOfLeftSubTree=" + rightMostOfLeftSubTree.id +
-                    ", id=" + id +
+                    "id=" + id +
+                    ", left=" +(left==null?"null":left.id) +
+                    ", right=" +(right==null?"null":right.id) +
+                    ", parent=" +(parent==null?"null":parent.id) +
+                    ", leftMostOfRightSubTree=" +(leftMostOfRightSubTree==null?"null":leftMostOfRightSubTree.id) +
+                    ", rightMostOfLeftSubTree=" +(rightMostOfLeftSubTree==null?"null":rightMostOfLeftSubTree.id) +
                     ", rightWeight=" + rightWeight +
                     ", leftWeight=" + leftWeight +
                     ", data=" + data +
-                    '}';
+                    "}";
         }
     }
 
@@ -50,6 +54,7 @@ public class LazyBalancedBinarySearchTree<T> {
 
     public Node add(int id, T data) throws Exception {
         Node newNode = new Node(id, data);
+        nodeList.add(newNode);
         Node localCurrent = root;
 
         if (root == null) {//todo: refactor, most the time the root is not null
@@ -72,7 +77,7 @@ public class LazyBalancedBinarySearchTree<T> {
     }
 
     private void weightDistribute(Node current) {
-        while (current != null) {
+        if (current != null) {
             if (current.left != null) {
                 current.leftWeight = current.left.rightWeight + current.left.leftWeight + 1;
             }
@@ -97,12 +102,22 @@ public class LazyBalancedBinarySearchTree<T> {
                     newNode.parent.right = newNode.parent.parent;
                     newNode.parent.parent.parent = newNode.parent;
                     newNode.parent.parent.left = null;
+                    newNode.parent.parent.leftWeight = 0;
+                    newNode.parent.parent.rightWeight = 0;
                     newNode.parent.parent = null;
                     root = newNode.parent;
                 } else {
                     newNode.parent.right = newNode.parent.parent;
-                    newNode.parent.parent.parent.left = newNode.parent;
+                    if (newNode.parent.parent.parent.left == newNode.parent.parent) {
+                        newNode.parent.parent.parent.left = newNode.parent;
+                    }
+                    else{
+                        newNode.parent.parent.parent.right = newNode.parent;
+                    }
+//                    newNode.parent = newNode.parent.parent.parent;
                     newNode.parent.parent.left = null;
+                    newNode.parent.parent.leftWeight = 0;
+                    newNode.parent.parent.rightWeight = 0;
                     Node parent = newNode.parent.parent.parent;
                     newNode.parent.parent.parent = newNode.parent;
                     newNode.parent.parent = parent;
@@ -113,11 +128,19 @@ public class LazyBalancedBinarySearchTree<T> {
                     newNode.parent.left = newNode.parent.parent;
                     newNode.parent.parent.parent = newNode.parent;
                     newNode.parent.parent.right = null;
+                    newNode.parent.parent.leftWeight = 0;
+                    newNode.parent.parent.rightWeight = 0;
                     newNode.parent.parent = null;
                     root = newNode.parent;
                 } else {
                     newNode.parent.left = newNode.parent.parent;
-                    newNode.parent.parent.parent.right = newNode.parent;
+                    if (newNode.parent.parent.parent.left == newNode.parent.parent) {
+                        newNode.parent.parent.parent.left = newNode.parent;
+                    }
+                    else{
+                        newNode.parent.parent.parent.right = newNode.parent;
+                    }
+                    newNode.parent = newNode.parent.parent.parent;
                     newNode.parent.parent.right = null;
                     Node parent = newNode.parent.parent.parent;
                     newNode.parent.parent.parent = newNode.parent;
@@ -169,5 +192,36 @@ public class LazyBalancedBinarySearchTree<T> {
         } else if (current.compareTo(newNode) == 0) {
             throw new Exception("Duplicate Node ID" + newNode.toString());
         }
+    }
+    public String sortedOrder(){
+        String aggregate = "";
+        Node current = root;
+        while(current.left!=null){
+            current = current.left;
+        }
+
+        while(current!=null){
+            if(current.left!=null && !current.left.clean){
+                current = current.left;
+            }
+            else{
+                if(!current.clean){
+                    aggregate = aggregate.concat(current.toString()+"\n");
+                    current.clean = true;
+                }
+                if(current.right!=null&&!current.right.clean){
+                    current = current.right;
+                }
+                else if((current.right== null || current.right.clean)&&(current.left== null || current.left.clean)){
+                    current = current.parent;
+                }
+            }
+
+        }
+        for (Node node : nodeList) {
+            node.clean = false;
+        }
+
+        return aggregate;
     }
 }
