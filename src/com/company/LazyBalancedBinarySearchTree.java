@@ -4,6 +4,7 @@ import java.util.ArrayList;
 
 public class LazyBalancedBinarySearchTree<T> {
     private ArrayList<Node> nodeList = new ArrayList<>();
+
     private class Node implements Comparable {
         public Node left = null;
         public Node right = null;
@@ -36,11 +37,11 @@ public class LazyBalancedBinarySearchTree<T> {
         public String toString() {
             return "Node{" +
                     "id=" + id +
-                    ", left=" +(left==null?"null":left.id) +
-                    ", right=" +(right==null?"null":right.id) +
-                    ", parent=" +(parent==null?"null":parent.id) +
-                    ", leftMostOfRightSubTree=" +(leftMostOfRightSubTree==null?"null":leftMostOfRightSubTree.id) +
-                    ", rightMostOfLeftSubTree=" +(rightMostOfLeftSubTree==null?"null":rightMostOfLeftSubTree.id) +
+                    ", left=" + (left == null ? "null" : left.id) +
+                    ", right=" + (right == null ? "null" : right.id) +
+                    ", parent=" + (parent == null ? "null" : parent.id) +
+                    ", leftMostOfRightSubTree=" + (leftMostOfRightSubTree == null ? "null" : leftMostOfRightSubTree.id) +
+                    ", rightMostOfLeftSubTree=" + (rightMostOfLeftSubTree == null ? "null" : rightMostOfLeftSubTree.id) +
                     ", rightWeight=" + rightWeight +
                     ", leftWeight=" + leftWeight +
                     ", data=" + data +
@@ -69,9 +70,6 @@ public class LazyBalancedBinarySearchTree<T> {
             weightDistribute(newNode); //called appropriately from localbalance case
             balance();
 
-        }
-        if (newNode == null) {
-            throw new Exception("Node was never created");
         }
         return newNode;
     }
@@ -110,8 +108,7 @@ public class LazyBalancedBinarySearchTree<T> {
                     newNode.parent.right = newNode.parent.parent;
                     if (newNode.parent.parent.parent.left == newNode.parent.parent) {
                         newNode.parent.parent.parent.left = newNode.parent;
-                    }
-                    else{
+                    } else {
                         newNode.parent.parent.parent.right = newNode.parent;
                     }
 //                    newNode.parent = newNode.parent.parent.parent;
@@ -136,35 +133,85 @@ public class LazyBalancedBinarySearchTree<T> {
                     newNode.parent.left = newNode.parent.parent;
                     if (newNode.parent.parent.parent.left == newNode.parent.parent) {
                         newNode.parent.parent.parent.left = newNode.parent;
-                    }
-                    else{
+                    } else {
                         newNode.parent.parent.parent.right = newNode.parent;
                     }
-                    newNode.parent = newNode.parent.parent.parent;
+//                    newNode.parent = newNode.parent.parent.parent;
                     newNode.parent.parent.right = null;
+                    newNode.parent.parent.leftWeight = 0;
+                    newNode.parent.parent.rightWeight = 0;
                     Node parent = newNode.parent.parent.parent;
                     newNode.parent.parent.parent = newNode.parent;
                     newNode.parent.parent = parent;
                 }
-            }else if (newNode.parent.left == null && newNode.parent.parent.right == null) {
+            } else if (newNode.parent.left == null && newNode.parent.parent.right == null) {
                 if (newNode.parent.parent == root) {
                     //new root
                     newNode.right = newNode.parent.parent;
+                    newNode.parent.parent.left = null;
                     newNode.left = newNode.parent;
+                    newNode.parent.right = null;
                     newNode.right.parent = newNode;
                     newNode.left.parent = newNode;
                     newNode.right.leftWeight = 0;
                     newNode.right.rightWeight = 0;
                     newNode.left.leftWeight = 0;
                     newNode.left.rightWeight = 0;
+                    newNode.parent = null;
                     root = newNode;
                 } else {
-                    newNode.parent.left = newNode.parent.parent;
-                    newNode.parent.parent.parent.right = newNode.parent;
-                    newNode.parent.parent.right = null;
+                    if (newNode.parent.parent.parent.left == newNode.parent.parent) {
+                        newNode.parent.parent.parent.left = newNode;
+                    } else {
+                        newNode.parent.parent.parent.right = newNode;
+                    }
                     Node parent = newNode.parent.parent.parent;
-                    newNode.parent.parent.parent = newNode.parent;
-                    newNode.parent.parent = parent;
+                    newNode.right = newNode.parent.parent;
+                    newNode.parent.parent.left = null;
+                    newNode.left = newNode.parent;
+                    newNode.parent.right = null;
+                    newNode.right.parent = newNode;
+                    newNode.left.parent = newNode;
+                    newNode.right.leftWeight = 0;
+                    newNode.right.rightWeight = 0;
+                    newNode.left.leftWeight = 0;
+                    newNode.left.rightWeight = 0;
+                    newNode.parent = parent;
+                }
+            }
+            else if (newNode.parent.right == null && newNode.parent.parent.left == null) {
+                if (newNode.parent.parent == root) {
+                    //new root
+                    newNode.left = newNode.parent.parent;
+                    newNode.parent.parent.right = null;
+                    newNode.right = newNode.parent;
+                    newNode.parent.left = null;
+                    newNode.left.parent = newNode;
+                    newNode.right.parent = newNode;
+                    newNode.right.leftWeight = 0;
+                    newNode.right.rightWeight = 0;
+                    newNode.left.leftWeight = 0;
+                    newNode.left.rightWeight = 0;
+                    newNode.parent = null;
+                    root = newNode;
+                } else {
+                    if (newNode.parent.parent.parent.left == newNode.parent.parent) {
+                        newNode.parent.parent.parent.left = newNode;
+                    } else {
+                        newNode.parent.parent.parent.right = newNode;
+                    }
+                    Node parent = newNode.parent.parent.parent;
+                    newNode.left = newNode.parent.parent;
+                    newNode.parent.parent.right = null;
+                    newNode.right = newNode.parent;
+                    newNode.parent.left = null;
+                    newNode.left.parent = newNode;
+                    newNode.right.parent = newNode;
+                    newNode.left.leftWeight = 0;
+                    newNode.left.rightWeight = 0;
+                    newNode.right.leftWeight = 0;
+                    newNode.right.rightWeight = 0;
+                    newNode.parent = parent;
                 }
             }
         }
@@ -193,26 +240,25 @@ public class LazyBalancedBinarySearchTree<T> {
             throw new Exception("Duplicate Node ID" + newNode.toString());
         }
     }
-    public String sortedOrder(){
+
+    public String sortedOrder() {
         String aggregate = "";
         Node current = root;
-        while(current.left!=null){
+        while (current.left != null) {
             current = current.left;
         }
 
-        while(current!=null){
-            if(current.left!=null && !current.left.clean){
+        while (current != null) {
+            if (current.left != null && !current.left.clean) {
                 current = current.left;
-            }
-            else{
-                if(!current.clean){
-                    aggregate = aggregate.concat(current.toString()+"\n");
+            } else {
+                if (!current.clean) {
+                    aggregate = aggregate.concat(current.toString() + "\n");
                     current.clean = true;
                 }
-                if(current.right!=null&&!current.right.clean){
+                if (current.right != null && !current.right.clean) {
                     current = current.right;
-                }
-                else if((current.right== null || current.right.clean)&&(current.left== null || current.left.clean)){
+                } else if ((current.right == null || current.right.clean) && (current.left == null || current.left.clean)) {
                     current = current.parent;
                 }
             }
