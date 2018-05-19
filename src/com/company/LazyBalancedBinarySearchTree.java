@@ -178,8 +178,7 @@ public class LazyBalancedBinarySearchTree<T> {
                     newNode.left.rightWeight = 0;
                     newNode.parent = parent;
                 }
-            }
-            else if (newNode.parent.right == null && newNode.parent.parent.left == null) {
+            } else if (newNode.parent.right == null && newNode.parent.parent.left == null) {
                 if (newNode.parent.parent == root) {
                     //new root
                     newNode.left = newNode.parent.parent;
@@ -218,7 +217,84 @@ public class LazyBalancedBinarySearchTree<T> {
     }
 
     private void balance() {
-        Node localCurrent = root;
+        boolean rebalance = false;
+        if (root.leftWeight - root.rightWeight < -1) {
+            rebalance = true;
+            Node leftMostOfRightSubTree = root.right;
+            while (leftMostOfRightSubTree.left != null) {
+                leftMostOfRightSubTree = leftMostOfRightSubTree.left;
+            }
+            if (leftMostOfRightSubTree.parent.right == leftMostOfRightSubTree) {
+                leftMostOfRightSubTree.left = root;
+                root.parent = leftMostOfRightSubTree;
+                leftMostOfRightSubTree.parent.right = null;
+                leftMostOfRightSubTree.parent.rightWeight = 0;
+                leftMostOfRightSubTree.parent = null;
+                root = leftMostOfRightSubTree;
+            } else {
+                if (leftMostOfRightSubTree.right != null) {
+                    leftMostOfRightSubTree.parent.left = leftMostOfRightSubTree.right;
+                    leftMostOfRightSubTree.right.parent = leftMostOfRightSubTree.parent;
+                }
+                leftMostOfRightSubTree.left = root;
+                root.parent = leftMostOfRightSubTree;
+                leftMostOfRightSubTree.right = root.right;
+                leftMostOfRightSubTree.parent.left = null;
+                leftMostOfRightSubTree.parent.leftWeight = 0;
+                root.right.parent = leftMostOfRightSubTree;
+                root.right = null;
+                root = leftMostOfRightSubTree;
+                root.parent = null;
+            }
+        } else if (root.leftWeight - root.rightWeight > 1) {
+            rebalance = true;
+            Node rightMostOfLeftSubTree = root.left;
+            while (rightMostOfLeftSubTree.right != null) {
+                rightMostOfLeftSubTree = rightMostOfLeftSubTree.right;
+            }
+            if (rightMostOfLeftSubTree.parent.left == rightMostOfLeftSubTree) {
+                rightMostOfLeftSubTree.right = root;
+                root.parent = rightMostOfLeftSubTree;
+                rightMostOfLeftSubTree.parent.left = null;
+                rightMostOfLeftSubTree.parent.leftWeight = 0;
+                rightMostOfLeftSubTree.parent = null;
+                root = rightMostOfLeftSubTree;
+            } else {
+                if (rightMostOfLeftSubTree.left != null) {
+                    rightMostOfLeftSubTree.parent.right = rightMostOfLeftSubTree.left;
+                    rightMostOfLeftSubTree.left.parent = rightMostOfLeftSubTree.parent;
+                }
+                rightMostOfLeftSubTree.right = root;
+                root.parent = rightMostOfLeftSubTree;
+                rightMostOfLeftSubTree.left = root.left;
+                rightMostOfLeftSubTree.parent.right = null;
+                rightMostOfLeftSubTree.parent.rightWeight = 0;
+                root.left.parent = rightMostOfLeftSubTree;
+                root.left = null;
+                root = rightMostOfLeftSubTree;
+                root.parent = null;
+            }
+        }
+        if (rebalance && root.left != null && root.right != null) {
+            Node rLeft = root.left;
+            Node rRight = root.right;
+            while (rLeft.right != null || rLeft.left != null) {
+                if (rLeft.right != null) {
+                    rLeft = rLeft.right;
+                } else {
+                    rLeft = rLeft.left;
+                }
+            }
+            while (rRight.left != null || rRight.right != null) {
+                if (rRight.left != null) {
+                    rRight = rRight.left;
+                } else {
+                    rRight = rRight.right;
+                }
+            }
+            weightDistribute(rLeft);
+            weightDistribute(rRight);
+        }
     }
 
     private void walk(Node newNode, Node current) throws Exception {
